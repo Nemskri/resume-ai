@@ -1,0 +1,8 @@
+flask
+python-dotenv
+pypandoc
+pymupdf
+pytesseract
+pdfminer.six
+pillow
+requests
