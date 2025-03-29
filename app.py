@@ -6,20 +6,25 @@ import os
 import pypandoc
 import json
 
+from flask_cors import CORS
 from dotenv import load_dotenv
-from flask import Flask, jsonify, request, abort
-from utility import create_folder,deleteFolder,download_file
+from flask import Flask, jsonify, request
+from utility import create_folder,deleteFolder,chat_with_gpt
 from doc import extract_text_from_pdf,ocr_pdf
+from prompts import resume_prompt
+
+
 
 
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route("/")
 def index():
     print("Healthy Flask")
-    return "Audio Analysis Flask Running!"
+    return "Doc parser Flask Running!"
 
 
 @app.route("/extract-content", methods=["POST"])
@@ -62,7 +67,10 @@ def extractcontentsFromDocs():
         if len(raw_text) == 0:
             raw_text = ocr_pdf(pdf)
 
-        return jsonify({"text": raw_text})
+        if len(raw_text) == 0:
+            return jsonify({"error": "Couldn't extract text"}), 500
+        extracted_data = chat_with_gpt(system_prompt=resume_prompt,user_prompt=raw_text,model="gpt-4o-mini",max_tokens=350)
+        return jsonify(extracted_data)
 
     except Exception as err:
         print("Error:", err)

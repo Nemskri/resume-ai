@@ -6,3 +6,5 @@ pytesseract
 pdfminer.six
 pillow
 requests
+openai
+flask_cors
