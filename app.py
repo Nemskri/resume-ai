@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from utility import create_folder,deleteFolder,chat_with_gpt
 from doc import extract_text_from_pdf,ocr_pdf
-from prompts import resume_prompt
+from prompts import resume_prompt, insights_prompt
 
 
 
@@ -69,7 +69,7 @@ def extractcontentsFromDocs():
 
         if len(raw_text) == 0:
             return jsonify({"error": "Couldn't extract text"}), 500
-        extracted_data = chat_with_gpt(system_prompt=resume_prompt,user_prompt=raw_text,model="gpt-4o-mini",max_tokens=350)
+        extracted_data = chat_with_gpt(system_prompt=resume_prompt,user_prompt=raw_text,model="gpt-4o-mini")
         return jsonify(extracted_data)
 
     except Exception as err:
@@ -79,6 +79,19 @@ def extractcontentsFromDocs():
     finally:
         deleteFolder(output_path)
 
+@app.route("/get-insights", methods=["POST"])
+def getInsights():
+    try:
+        # Get the JSON data from the request
+        data = request.get_json()
+        if not data or "resumeData" not in data or "jobDescription" not in data:
+            return jsonify({"error": "Missing resumeData or jobDescription"}), 400
+        resume_data = data["resumeData"]
+        job_description = data["jobDescription"]
+        insights = chat_with_gpt(system_prompt=insights_prompt, user_prompt=f"Resume Data: {json.dumps(resume_data)}, Job Description: {job_description}",model="gpt-4o-mini")
+        return jsonify(insights)
+    except Exception as err:
+        return jsonify({"error": str(err)}), 500
 
 if __name__ == "__main__":
     port = 8080

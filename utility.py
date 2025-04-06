@@ -29,14 +29,24 @@ def deleteFolder(folder_path):
     except:
         print("An exception occurred while Deleting")
 
-def chat_with_gpt(system_prompt: str, user_prompt: str, model: str = "gpt-4o-mini", max_tokens: int = 350):
-    response = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ],
-        response_format={"type":"json_object"},
-        max_tokens=max_tokens
-    )
-    return json.loads(response.choices[0].message.content)
+def chat_with_gpt(system_prompt: str, user_prompt: str, model: str = "gpt-4o-mini", max_tokens: int = None):
+    try:
+        # Base parameters
+        params = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            "response_format": {"type": "json_object"}
+        }
+        
+        # Add max_tokens only if it's provided (not None)
+        if max_tokens is not None:
+            params["max_tokens"] = max_tokens
+
+        response = client.chat.completions.create(**params)
+        return json.loads(response.choices[0].message.content)
+    except Exception as err:
+        print("Exception in LLM Call", err)
+        return {}
